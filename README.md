@@ -206,7 +206,98 @@ Ahora bien, hay un par de comandos y conceptos (ya vistos y nuevos) que hace fal
     Git escribe al archivo sobre el que está el conflicto, dejando marcas que indican cuales son los cambios de HEAD y cuales los de la branch a mergear.
     El conflicto se resuelve un haciendo un commit, que git tomará como válido sólo si se sacaron las marcas ya mencionadas. 
     La idea de este commit es que se decida qué versión (la de HEAD o la de la otra branch) va a quedar como definitiva, o bien se haga a mano un mergeo de las dos, pero es importante destacar que en esta etapa la única validación que hace git es verificar que se hayan sacado las marcas, no chequea que los cambios introducidos incluyan algo o nada de lo que se quería mergear, o que el código en cuestión sea correcto o vaya a compilar.
-* `git pull`: Hace fetch del repo remoto y mergea los cambios de este con el último commit local de la branch actual, resultando, en los casos felices, en un fast-foward.
-* `git push`: Hace fetch del repo remoto y le indica que haga un merge de su último commit del branch actual con el último local nuestro. Si no puede hacer fast-foward, falla. En tal caso, hay dos opciones:
+    Nota: hay que volver a agregar los archivos con `git add` luego de las modificaciones para arreglar el merge conflict.
+* `git pull`: Hace fetch del repo remoto y mergea los cambios de este con el último commit local de la branch actual, resultando, en los casos felices, en un fast-foward. El merge automático puede fallar y dejarnos con un merge conflict, en cuyo caso hay que resolverlo como se explicó más arriba, y luego pushear los cambios para cerrar la divergencia de branches.
+* `git push`: Hace fetch del repo remoto y le indica que haga un merge de su último commit del branch actual con el último local nuestro.
+Si no puede hacer fast-foward, falla.
+En tal caso, hay dos opciones:
     * Si la branch remota avanzó, y la local no: Hacer `git pull` para traer los cambios, y luego pushear.
-    * Si la branch remota avanzó, y la local también 
+    * Si la branch remota avanzó, y la local también: Hacer `git pull` para traer los cambios, pero lidiar con un merge conflict como se explicó más arriba.
+
+### mergeando branches
+
+En general, en un repo se tiene una branch 'principal', donde se van aglomerando todos los cambios de toda la gente involucrada.
+En este caso, vamos a tomar a `master` como branch principal.
+Actualmente, está desactualizado, porque no incluye la más reciente modularización y refactorización del código del comandante, por lo que procederemos a mergear los cambios hechos en clase a `master`.
+
+Nos aseguramos de estar parados en master:
+```
+ ~/ejercicio_biblioteca   resolucion_clase 
+ git checkout master
+Switched to branch 'master'
+Your branch is up-to-date with 'origin/master'.
+```
+Hacemos el merge:
+```
+ ~/ejercicio_biblioteca   master 
+ git merge -m "mergeo los cambios de resolucion_clase a master" resolucion_clase 
+Merge made by the 'recursive' strategy.
+ mathnuel.c          |  16 ++++++++++++++++
+ mathnuel.h          |   8 ++++++++
+ primos_comandante   | Bin 0 -> 8576 bytes
+ primos_comandante.c |  30 +++++++++++-------------------
+ 4 files changed, 35 insertions(+), 19 deletions(-)
+ create mode 100644 mathnuel.c
+ create mode 100644 mathnuel.h
+ create mode 100755 primos_comandante
+```
+No hubo conflictos! se puede chusmear ahora la historia de master, viéndose que incluye los commits de `master` y los de `resolucion_clase`:
+También se puede ver que git muestra de qué constan los cambios(que archivos se cambiaron, cuales se crearon y cuales se elimnaron) y la cantidad de adiciones y substracciones de líneas en cada edición.
+```
+ ~/ejercicio_biblioteca   master 
+ git log
+commit 96c47996471ad768860e05c3c9d0d380cef8655f (HEAD -> master)
+Merge: 54d1512 84e90c2
+Author: capurro <juanpcapurro@gmail.com>
+Date:   Wed Oct 11 09:46:29 2017 -0300
+
+    mergeo los cambios de resolucion_clase a master
+
+commit 54d151231ba32b1f987551cdf16397ddde491ba9 (origin/master, origin/HEAD)
+Author: capurro <juanpcapurro@gmail.com>
+Date:   Wed Oct 11 09:10:57 2017 -0300
+
+    Agregué sección de merges al tutorial
+
+commit 239a9e42bfad0fc6b33d06cdd5bf4209810bd835
+Author: capurro <juanpcapurro@gmail.com>
+Date:   Wed Oct 4 23:02:34 2017 -0300
+
+    WIP: Agregando partes del tutorial.
+
+commit 84e90c29a80c6b3d152940f0409fff36d04a8a90 (origin/resolucion_clase, resolucion_clase)
+Author: capurro <juanpcapurro@gmail.com>
+Date:   Wed Oct 4 10:30:56 2017 -0300
+
+    resolucion por la clase el 4/10
+
+commit 81b4124ff32097f3d8309746d5cd354fb642fedb
+Author: juanpcapurro <juanpcapurro@gmail.com>
+Date:   Tue Oct 3 20:41:15 2017 -0300
+
+    commit del cual comenzar la clase, el programa anda pero produce ceguera
+```
+Mirando con más detenimiento el log, se ve que:
+* origin/master se quedó en el commit anterior, es decir, no sabe nada de que acabamos de mergear.
+* el commit que se corresponde a resolucion_clase sigue allí, y la branch sigue existiendo.
+Ahora queda pushear al repo remoto:
+```
+ git push origin master
+Username for 'https://github.com': juanpcapurro
+Password for 'https://juanpcapurro@github.com': 
+To https://github.com/juanpcapurro/ejercicio_biblioteca.git
+   54d1512..96c4799  master -> master
+```
+Tarea: 
+- Son ahora `origin/master` y `master` referencias al mismo commit?
+Nota: si otra persona pusheó una branch al repo, al hacer `git checkout -b branch_otra_persona`, lo que se creará es una branch local llamada `branch_otra_persona`, partiendo desde HEAD, sin relación con los cambios que la otra persona pudiera haber hecho.
+Para lograr tener localmente un branch con los cambios de la otra persona, se debe crear un branch local que _trackee_ una branch remota, lo que se logra con:
+```
+git fetch origin
+git checkout -b branch_otra_persona origin/branch_otra_persona
+```
+
+## TODO
+* Ejemplo de merge conflict
+* Ejemplos de branches locales y remotas
+* Cheat sheet 
