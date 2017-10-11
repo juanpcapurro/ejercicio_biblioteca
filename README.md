@@ -1,16 +1,11 @@
-# Resolución del ejercicio de bibliotecas 4/10/2017
+# Mini-tutorial de git
 
-Partimos del código que nos dejó El Comandante, el cual se compila con 
-```
-gcc -Wall -Wconversion -std=c99 -o primos_comandante primos_comandante.c
-```
-## Mini-tutorial de git
-#### Sobre este tutorial:
+### Sobre este tutorial:
 Está orientado no a aprender a usar git, sino a _entender_ git. 
 Para sacarle todo el jugo a este tutorial, conviene que te crees una cuenta en github (este sito), y _forkees_ este repositorio.
 Caso contrario, solo podrás hacer la primer mitad de este tutorial.
 
-#### Comenzando
+### Comenzando
 Para obtener el código de este ejercicio tendrás que hacer `git clone`, o bien de este repo(no recomendado), o bien del que hayas forkeado.
 Partirás en la branch _master_, que es de donde salir si querés implementar esto por tu cuenta.
 
@@ -25,7 +20,7 @@ Tiene un identificador único.
 `git init` _inicializa_ un repo, y `git clone` trae un repo desde una ubicación remota.
 El repo que tenés en tu computadora no tiene grandes diferencias con el que hay hosteado en github, o el que hay en mi computadora mientras preparo este tutorial.
 
-#### Checkout y branches
+### Checkout y branches
 Para pasarse a otra branch:
 ```
 git checkout branch_name # se pasan a la branch branch_name, que ya debe existir
@@ -135,7 +130,7 @@ no changes added to commit (use "git add" and/or "git commit -a")
 Dropped refs/stash@{0} (98e9e2818394416dabf0cc08d0f1906c96b1f901)
 ```
 
-#### Commits y guardar los cambios
+### Commits y guardar los cambios
 Ahora, si estás conforme con la modularización, podés pasar a hacer un commit con los cambios.
 Idealmente, se hace un commit cuando se cierra algún refactor (como es este caso) o se termina de implementar una nueva _feature_.
 Sin embargo, es usual también hacer un commit para tener un punto al cual volver antes de intentar hacer algún cambio, incluso si es a mitad de una feature.
@@ -174,7 +169,7 @@ Tarea:
 * Refactorizar el código visto en una biblioteca, como se hizo en clase (básicamente, sacar la función `es_primo` a una biblioteca, y que el programa mantenga su funcionalidad).
 * Hacer un commit con los cambios hechos, con un nombre descriptivo. Recordá que hay que agregar los archivos (`git add `) antes de ponerlos en un commit.
 
-#### publicando a un repo remoto.
+### Publicando a un repo remoto.
 
 Ahora queda subir estos cambios a algún lado, para que alguien más pueda verlo o hacer cambios desde esta implementación, o simplemente para tener un backup en github.
 Vas a poder hacer esto si forkeaste previamente el repositorio, y tenés un repo en github que es de tu propiedad.
@@ -193,4 +188,25 @@ To https://github.com/juanpcapurro/ejercicio_biblioteca.git
  * [new branch]      resolucion_fabian -> resolucion_fabian
 ```
 
+## Merges
 
+Es un buen momento para tomar un descanso y dejar asentar lo que vimos hasta ahora, ya que todo lo siguiente requiere tener bien claros los conceptos anteriores.
+
+Ahora bien, hay un par de comandos y conceptos (ya vistos y nuevos) que hace falta explicar en más profundidad:
+* `HEAD`: El último commit al que se le hizo checkout.
+* `[commit]~n`: El n-ésimo ancestro de `commit`, siguiendo al primer padre en caso de ambigüedad. Se usa sin brackets. Ejemplos: `HEAD~1`, `branch_charly~2`.
+* `git fetch`: Se comunica con _origin_, el repositorio remoto por defecto, y pregunta por nuevos cambios.
+* `git merge branch_b`: Estando parado en el `branch_a`, se trae los cambios de `branch_b`. Hay tres tipos de merges posibles:
+    * fast foward: Es el caso más facil, en el que el commit de destino (`branch_b` en este caso) es padre del commit actual, por lo que lo que se hace es avanzar (duh!) la referencia del branch actual. Si se quiere evitar esto a toda costa, y que se haga siempre un commit de merge, se puede pasarle `--no-ff` como parámetro, y así siempre generará un `merge commit`.
+    * merge _feliz_: Se genera un _merge commit_, donde se explicita qué branches se mergearon, y como cualquier commit, se le puede agregar un mensaje. Al terminar el merge, se tienen los cambios de ambas branches.
+    * _merge conflict_: Es el caso menos feliz, cuando en ambas branches se modificó el mismo archivo en la misma línea, y git no sabe qué cambio tomar como el verdadero.
+    [Amerita cómics](https://xkcd.com/1597/). El repo queda en un estado de conflicto, y git espera que salgamos de este lío.
+    Una opción posible es hacer `git merge --abort` para decirle a git 'al cabo que ni quería mergear', y desista en sus intentos, lo que deja el repo como estaba antes de intentar mergear.
+    La otra opción es ver en qué archivos se dio el conflicto y resolverlo.
+    Git escribe al archivo sobre el que está el conflicto, dejando marcas que indican cuales son los cambios de HEAD y cuales los de la branch a mergear.
+    El conflicto se resuelve un haciendo un commit, que git tomará como válido sólo si se sacaron las marcas ya mencionadas. 
+    La idea de este commit es que se decida qué versión (la de HEAD o la de la otra branch) va a quedar como definitiva, o bien se haga a mano un mergeo de las dos, pero es importante destacar que en esta etapa la única validación que hace git es verificar que se hayan sacado las marcas, no chequea que los cambios introducidos incluyan algo o nada de lo que se quería mergear, o que el código en cuestión sea correcto o vaya a compilar.
+* `git pull`: Hace fetch del repo remoto y mergea los cambios de este con el último commit local de la branch actual, resultando, en los casos felices, en un fast-foward.
+* `git push`: Hace fetch del repo remoto y le indica que haga un merge de su último commit del branch actual con el último local nuestro. Si no puede hacer fast-foward, falla. En tal caso, hay dos opciones:
+    * Si la branch remota avanzó, y la local no: Hacer `git pull` para traer los cambios, y luego pushear.
+    * Si la branch remota avanzó, y la local también 
